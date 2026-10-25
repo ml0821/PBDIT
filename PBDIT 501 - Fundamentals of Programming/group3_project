@@ -1,1 +1,71 @@
 #sample code
+
+"""
+PBDIT 1-2
+Group 3
+Institutional Repository System
+Backend
+"""
+
+#1.1 - Create empty storage for users and publications
+
+users = []                                                          #empty storage for registered users
+publications = []                                                   #empty storage for publications
+
+
+#1.2 - Create the sign up function
+
+def sign_up():
+
+        print("========== CREATE ACCOUNT ==========")               #display the create account heading
+
+        full_name = input("Enter full name: ")                      #input for user's full name
+        email = input("Enter e-mail: ")                             #input for user's e-mail
+        username = input("Enter username / ID: ")                   #input for user's username or ID
+        password = input("Enter password: ")                        #input for user's password. we could use getpass module to mask password entry                      
+        role = input("Enter role: ")                                #input for user's role
+
+        if      (full_name == "" or                                 #check if full name is empty
+                 email == "" or                                     #check if e-mail is empty
+                 username == "" or                                  #check if username is empty
+                 password == "" or                                  #check if password is empty
+                 role == ""):                                       #check if role is empty
+
+                print("Please complete all fields.")                #display incomplete fields message
+
+        else:
+
+                username_exists = False                             #set username existence to false
+
+                for user in users:                                  #check each registered user
+
+                        if user["username"] == username:            #check if username already exists
+
+                                username_exists = True              #set username existence to true
+
+                if      username_exists:                            #check if username already exists
+
+                        print("Username / ID already exists.")      #display username exists message
+
+                else:
+
+                        user = {                                    #create user information
+                                "full_name": full_name,             #store user's full name
+                                "email": email,                     #store user's e-mail
+                                "username": username,               #store user's username
+                                "password": password,               #store user's password
+                                "role": role                        #store user's role
+                        }
+
+                        users.append(user)                          #store user information in the users list
+
+                        print("Account created successfully.")      #display successful account creation message
+
+
+#1.3 - Run the sign up function
+
+sign_up()                                                           #call the sign up function
+
+
+
+#END OF SAMPLE
