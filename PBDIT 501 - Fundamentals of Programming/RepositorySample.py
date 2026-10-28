@@ -1,19 +1,27 @@
+import tkinter as tk
+from tkinter import messagebox, simpledialog
+
+
 class Article:
     def __init__(self, title, author, abstract, category, status="Pending"):
         self.title = title
         self.author = author
         self.abstract = abstract
         self.category = category
-        self.status = status  # "Pending" or "Published"
+        self.status = status
 
     def __str__(self):
-        status_label = "Published (Approved)" if self.status == "Published" else "Pending Review"
-        return f"Title: {self.title} | Author: {self.author} | Category: {self.category} | Status: {status_label}"
+        s_label = "Published (Approved)" if self.status == "Published" else "Pending Review"
+        return f"Title: {self.title} | Author: {self.author} | Category: {self.category} | Status: {s_label}"
 
 
-class InstitutionalRepositorySystem:
-    def __init__(self):
-        # Pre-registered accounts (Confidential database)
+class InstitutionalRepositoryGUI:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Institutional Repository System")
+        self.root.geometry("850x550")
+        self.root.resizable(False, False)
+
         self.users = {
             "FAC-001": {"password": "password123", "name": "Martin Lansang", "role": "Faculty"},
             "FAC-002": {"password": "password123", "name": "Jeffrey Francisco", "role": "Faculty"},
@@ -24,205 +32,302 @@ class InstitutionalRepositorySystem:
             "STD-004": {"password": "password123", "name": "Gaby Mendoza", "role": "Student"}
         }
 
-        # Initial sample articles
         self.articles = [
-            Article("Introduction to Computing", "Martin Lansang",
-                    "Discusses the fundamental concepts and foundations of technology and computers, serving as a guide and reference for university students.", "Technology", "Published"),
-            Article("Principles of Marketing", "Jeffrey Francisco",
-                    "Covers core concepts such as market segmentation, consumer behavior, and the marketing mix, providing foundational knowledge for understanding strategic business management.", "Management", "Published")
+            Article("Introduction to Computing", "Martin Lansang", "Discusses foundations of tech.", "Technology",
+                    "Published"),
+            Article("Principles of Marketing", "Jeffrey Francisco", "Covers core marketing concepts.", "Management",
+                    "Published")
         ]
 
-    def main_menu(self):
-        while True:
-            print("\n==================================================")
-            print(" INSTITUTIONAL REPOSITORY SYSTEM")
-            print("==================================================")
-            print("[1] Log in (Faculty, Librarian, or Student)")
-            print("[2] Exit")
+        self.create_login_screen()
 
-            choice = input("Select an option (1-2): ").strip()
+    def clear_window(self):
+        for widget in self.root.winfo_children():
+            widget.destroy()
 
-            if choice == "1":
-                self.login_user()
-            elif choice == "2":
-                print("\nThank you for using the Institutional Repository System. Goodbye!")
-                break
-            else:
-                print("Invalid choice. Please select 1 or 2.")
+    def create_login_screen(self):
+        self.clear_window()
 
-    def login_user(self):
-        print("\n--- SYSTEM LOGIN ---")
-        user_id = input("Enter your ID / Username (e.g., FAC-001, LIB-001, STD-001): ").strip()
+        # Left Banner
+        left_frame = tk.Frame(self.root, bg="#1b365d", width=425)
+        left_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
-        # Check if the user ID is NOT pre-registered in the system
-        if user_id not in self.users:
-            print("\n[Access Denied]: The user is not yet registered.")
-            print(
-                ">> Notice: Students and users who are not yet registered must report to the Information and Communications Technology Office.")
-            return
+        left_content = tk.Frame(left_frame, bg="#1b365d")
+        left_content.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 
-        password = input("Enter Password: ").strip()
+        tk.Label(left_content, text="Institutional\nRepository System", font=("Arial", 22, "bold"), bg="#1b365d",
+                 fg="white", justify="left").pack(anchor="w", pady=(0, 15))
 
-        if self.users[user_id]["password"] != password:
-            print("Incorrect password! Please try again.")
-            return
+        sub = "Access scholarly publications,\nresearch papers, and academic works\nin one place."
+        tk.Label(left_content, text=sub, font=("Arial", 11), bg="#1b365d", fg="#d0d7de", justify="left").pack(
+            anchor="w")
 
-        current_user = self.users[user_id]
-        print(f"\nLogin successful! Welcome, {current_user['name']} ({current_user['role']}).")
+        # Right Form
+        bg_col = "#eef2f7"
+        right_frame = tk.Frame(self.root, bg=bg_col, width=425)
+        right_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
 
-        # Route to respective portal based on role
-        if current_user["role"] == "Faculty":
-            self.faculty_portal(user_id)
-        elif current_user["role"] == "Librarian":
-            self.librarian_portal(user_id)
-        elif current_user["role"] == "Student":
-            self.student_portal(user_id)
+        right_content = tk.Frame(right_frame, bg=bg_col)
+        right_content.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 
-    def change_password(self, user_id):
-        print("\n--- CHANGE PASSWORD ---")
-        old_pass = input("Enter current password: ").strip()
-        if old_pass != self.users[user_id]["password"]:
-            print("The current password you entered is incorrect.")
-            return
+        tk.Label(right_content, text="Welcome Back", font=("Arial", 20, "bold"), bg=bg_col, fg="#1b365d").pack(
+            anchor="w", pady=(0, 5))
+        tk.Label(right_content, text="Login to your account", font=("Arial", 10), bg=bg_col, fg="#666").pack(anchor="w",
+                                                                                                             pady=(0,
+                                                                                                                   20))
 
-        new_pass = input("Enter NEW password: ").strip()
-        confirm_pass = input("Confirm NEW password: ").strip()
+        self.id_var = tk.StringVar()
+        self.pass_var = tk.StringVar()
 
-        if new_pass == confirm_pass and new_pass != "":
-            self.users[user_id]["password"] = new_pass
-            print(">> Success! Your password has been updated.")
+        self.id_var.trace_add("write", self.check_inputs)
+        self.pass_var.trace_add("write", self.check_inputs)
+
+        tk.Label(right_content, text="Username / ID", font=("Arial", 9, "bold"), bg=bg_col, fg="#333").pack(anchor="w")
+        self.id_entry = tk.Entry(right_content, textvariable=self.id_var, font=("Arial", 11), width=28, bg="white",
+                                 relief="solid", bd=1)
+        self.id_entry.pack(anchor="w", pady=(5, 15), ipady=4)
+
+        tk.Label(right_content, text="Password", font=("Arial", 9, "bold"), bg=bg_col, fg="#333").pack(anchor="w")
+        self.pass_entry = tk.Entry(right_content, textvariable=self.pass_var, font=("Arial", 11), width=28, bg="white",
+                                   show="*", relief="solid", bd=1)
+        self.pass_entry.pack(anchor="w", pady=(5, 20), ipady=4)
+
+        self.login_btn = tk.Button(right_content, text="LOGIN", font=("Arial", 10, "bold"), bg="#dcdcdc", fg="#888888",
+                                   width=25, relief="flat", command=self.authenticate_user)
+        self.login_btn.pack(anchor="w", ipady=8)
+
+    def check_inputs(self, *args):
+        has_id = bool(self.id_var.get().strip())
+        has_pass = bool(self.pass_var.get().strip())
+        if has_id or has_pass:
+            self.login_btn.config(bg="#1b365d", fg="white", cursor="hand2")
         else:
-            print("New passwords do not match or field is blank. Please try again.")
+            self.login_btn.config(bg="#dcdcdc", fg="#888888", cursor="")
 
-    def faculty_portal(self, user_id):
-        user_info = self.users[user_id]
-        while True:
-            print(f"\n[FACULTY PORTAL - {user_info['name']}]")
-            print("[1] Upload New Publication File")
-            print("[2] View My Uploads and Status")
-            print("[3] Change Password")
-            print("[4] Log out (Return to Main Menu)")
+    def authenticate_user(self):
+        uid = self.id_var.get().strip()
+        pwd = self.pass_var.get().strip()
 
-            choice = input("Select an option (1-4): ").strip()
+        if uid not in self.users:
+            messagebox.showerror("Access Denied", "User is not yet registered.")
+            return
 
-            if choice == "1":
-                print("\n--- Upload Publication File ---")
-                title = input("Article Title: ")
-                abstract = input("Abstract / Summary: ")
-                category = input("Category / Field: ")
+        if self.users[uid]["password"] != pwd:
+            messagebox.showerror("Error", "Incorrect password!")
+            return
 
-                new_art = Article(title, user_info['name'], abstract, category, status="Pending")
-                self.articles.append(new_art)
-                print(">> Publication file uploaded successfully! It is now pending librarian approval.")
+        u_info = self.users[uid]
+        messagebox.showinfo("Success", f"Welcome, {u_info['name']} ({u_info['role']}).")
 
-            elif choice == "2":
-                print(f"\n--- Publications by {user_info['name']} ---")
-                my_articles = [art for art in self.articles if user_info['name'].lower() in art.author.lower()]
-                if not my_articles:
-                    print("You haven't uploaded any articles yet.")
-                else:
-                    for idx, art in enumerate(my_articles, 1):
-                        print(f"\n[{idx}] {art}")
-                        print(f"    Abstract: {art.abstract}")
+        if u_info["role"] == "Faculty":
+            self.open_faculty_portal(uid)
+        elif u_info["role"] == "Librarian":
+            self.open_librarian_portal(uid)
+        elif u_info["role"] == "Student":
+            self.open_student_portal(uid)
 
-            elif choice == "3":
-                self.change_password(user_id)
-            elif choice == "4":
-                print(">> Logged out from Faculty Portal.")
-                break
+    def open_change_password(self, uid):
+        pw_win = tk.Toplevel(self.root)
+        pw_win.title("Change Password")
+        pw_win.geometry("350x250")
+        pw_win.config(bg="#fefefe")
+
+        tk.Label(pw_win, text="Current Password:", bg="#fefefe").pack(pady=5)
+        old_e = tk.Entry(pw_win, show="*", width=25)
+        old_e.pack(pady=2)
+
+        tk.Label(pw_win, text="New Password:", bg="#fefefe").pack(pady=5)
+        new_e = tk.Entry(pw_win, show="*", width=25)
+        new_e.pack(pady=2)
+
+        tk.Label(pw_win, text="Confirm Password:", bg="#fefefe").pack(pady=5)
+        cnf_e = tk.Entry(pw_win, show="*", width=25)
+        cnf_e.pack(pady=2)
+
+        def save_pw():
+            if old_e.get() != self.users[uid]["password"]:
+                messagebox.showerror("Error", "Incorrect current password.")
+                return
+            if new_e.get() == cnf_e.get() and new_e.get() != "":
+                self.users[uid]["password"] = new_e.get()
+                messagebox.showinfo("Success", "Password updated!")
+                pw_win.destroy()
             else:
-                print("Invalid choice. Please try again.")
+                messagebox.showerror("Error", "Passwords do not match.")
 
-    def librarian_portal(self, user_id):
-        user_info = self.users[user_id]
-        while True:
-            print(f"\n[LIBRARIAN PORTAL - {user_info['name']}]")
-            print("[1] Review and Approve Pending Submissions")
-            print("[2] View All Repository Records")
-            print("[3] Change Password")
-            print("[4] Log out (Return to Main Menu)")
 
-            choice = input("Select an option (1-4): ").strip()
+        tk.Button(pw_win, text="Update Password", command=save_pw).pack(pady=15)
 
-            if choice == "1":
-                print("\n--- Pending Submissions ---")
-                pending = [art for art in self.articles if art.status == "Pending"]
-                if not pending:
-                    print("No pending articles waiting for approval.")
-                else:
-                    for idx, art in enumerate(pending, 1):
-                        print(f"\n[{idx}] Title: {art.title} | Author: {art.author} | Category: {art.category}")
+    def open_faculty_portal(self, uid):
+        self.clear_window()
+        u = self.users[uid]
+        f = tk.Frame(self.root, bg="#eef2f7", padx=20, pady=20)
+        f.pack(expand=True, fill=tk.BOTH)
+        c = tk.Frame(f, bg="#eef2f7")
+        c.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 
-                    sub_choice = input("Enter the number of the article to review (or 0 to cancel): ").strip()
-                    if sub_choice.isdigit() and 1 <= int(sub_choice) <= len(pending):
-                        selected_art = pending[int(sub_choice) - 1]
-                        approval = input(f"Approve '{selected_art.title}' for publication? (yes/no): ").strip().lower()
-                        if approval in ["yes", "y"]:
-                            selected_art.status = "Published"
-                            print(f">> Success! Article approved. Author ({selected_art.author}) has been notified.")
-                        else:
-                            print("Article kept as Pending.")
+        tk.Label(c, text=f"FACULTY PORTAL - {u['name']}", font=("Arial", 16, "bold"), bg="#eef2f7", fg="#1b365d").pack(
+            pady=20)
+        tk.Button(c, text="Upload New Publication", width=35, bg="white",
+                  command=lambda: self.faculty_upload(uid)).pack(pady=8)
+        tk.Button(c, text="View My Uploads", width=35, bg="white", command=lambda: self.faculty_view_uploads(uid)).pack(
+            pady=8)
+        tk.Button(c, text="Change Password", width=35, bg="white", command=lambda: self.open_change_password(uid)).pack(
+            pady=8)
+        tk.Button(c, text="Log Out", width=35, bg="#cc0000", fg="black", command=self.create_login_screen).pack(pady=15)
 
-            elif choice == "2":
-                print("\n--- Complete Repository Records ---")
-                for idx, art in enumerate(self.articles, 1):
-                    print(f"\n[{idx}] {art}")
+    def faculty_upload(self, uid):
+        u = self.users[uid]
+        up = tk.Toplevel(self.root)
+        up.title("Upload")
+        up.geometry("450x400")
 
-            elif choice == "3":
-                self.change_password(user_id)
-            elif choice == "4":
-                print(">> Logged out from Librarian Portal.")
-                break
-            else:
-                print("Invalid choice. Please try again.")
+        tk.Label(up, text="Title:").pack(anchor="w", padx=20, pady=5)
+        t_en = tk.Entry(up, width=50)
+        t_en.pack(padx=20)
 
-    def student_portal(self, user_id):
-        user_info = self.users[user_id]
-        while True:
-            print(f"\n[STUDENT PORTAL - {user_info['name']}]")
-            print("[1] Search Scholarly Articles")
-            print("[2] View All Published Articles")
-            print("[3] Change Password")
-            print("[4] Log out (Return to Main Menu)")
+        tk.Label(up, text="Abstract:").pack(anchor="w", padx=20, pady=5)
+        a_txt = tk.Text(up, width=45, height=6)
+        a_txt.pack(padx=20)
 
-            choice = input("Select an option (1-4): ").strip()
+        tk.Label(up, text="Category:").pack(anchor="w", padx=20, pady=5)
+        c_en = tk.Entry(up, width=50)
+        c_en.pack(padx=20)
 
-            if choice == "1":
-                keyword = input("Enter search keyword (title, author, or keyword): ").lower()
-                results = [art for art in self.articles if art.status == "Published" and (
-                        keyword in art.title.lower() or keyword in art.author.lower() or keyword in art.abstract.lower()
-                )]
+        def sub():
+            t = t_en.get().strip()
+            a = a_txt.get("1.0", tk.END).strip()
+            c = c_en.get().strip()
+            if not t or not a or not c:
+                messagebox.showerror("Error", "Fill all fields!")
+                return
+            self.articles.append(Article(t, u['name'], a, c, "Pending"))
+            messagebox.showinfo("Success", "Uploaded successfully!")
+            up.destroy()
 
-                print(f"\nResults Found: {len(results)}")
-                if results:
-                    for idx, art in enumerate(results, 1):
-                        print(f"\n[{idx}] {art}")
-                        print(f"    Abstract: {art.abstract}")
+        tk.Button(up, text="Submit", bg="#1b365d", fg="white", command=sub).pack(pady=15)
 
-                    dl = input("\nWould you like to view/download the full content? (yes/no): ").strip().lower()
-                    if dl in ["yes", "y"]:
-                        print(">>> Full-text copy downloaded/accessed successfully!")
-                else:
-                    print("No matching published articles found.")
+    def faculty_view_uploads(self, uid):
+        u = self.users[uid]
+        my_art = [x for x in self.articles if u['name'].lower() in x.author.lower()]
+        vw = tk.Toplevel(self.root)
+        vw.title("My Uploads")
+        vw.geometry("650x450")
+        txt = tk.Text(vw, wrap=tk.WORD, padx=15, pady=15)
+        txt.pack(expand=True, fill=tk.BOTH)
+        if not my_art:
+            txt.insert(tk.END, "No uploads yet.")
+        else:
+            for i, art in enumerate(my_art, 1):
+                txt.insert(tk.END, f"[{i}] {art}\n    Abstract: {art.abstract}\n\n" + "-" * 50 + "\n")
+        txt.config(state=tk.DISABLED)
 
-            elif choice == "2":
-                print("\n--- Available Published Articles ---")
-                published = [art for art in self.articles if art.status == "Published"]
-                if not published:
-                    print("Currently no published articles available.")
-                else:
-                    for idx, art in enumerate(published, 1):
-                        print(f"\n[{idx}] {art}")
-                        print(f"    Abstract: {art.abstract}")
-            elif choice == "3":
-                self.change_password(user_id)
-            elif choice == "4":
-                print(">> Logged out from Student Portal.")
-                break
-            else:
-                print("Invalid choice. Please try again.")
+    def open_librarian_portal(self, uid):
+        self.clear_window()
+        u = self.users[uid]
+        f = tk.Frame(self.root, bg="#eef2f7", padx=20, pady=20)
+        f.pack(expand=True, fill=tk.BOTH)
+        c = tk.Frame(f, bg="#eef2f7")
+        c.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+
+        tk.Label(c, text=f"LIBRARIAN PORTAL - {u['name']}", font=("Arial", 16, "bold"), bg="#eef2f7",
+                 fg="#1b365d").pack(pady=20)
+        tk.Button(c, text="Review Pending Submissions", width=38, bg="white", command=self.librarian_review).pack(
+            pady=8)
+        tk.Button(c, text="View All Records", width=38, bg="white", command=self.librarian_view_all).pack(pady=8)
+        tk.Button(c, text="Change Password", width=38, bg="white", command=lambda: self.open_change_password(uid)).pack(
+            pady=8)
+        tk.Button(c, text="Log Out", width=38, bg="#cc0000", fg="white", command=self.create_login_screen).pack(pady=15)
+
+    def librarian_review(self):
+        pend = [x for x in self.articles if x.status == "Pending"]
+        if not pend:
+            messagebox.showinfo("Info", "No pending articles.")
+            return
+        rv = tk.Toplevel(self.root)
+        rv.title("Review")
+        rv.geometry("600x450")
+        lb = tk.Listbox(rv, width=90, height=18)
+        lb.pack(padx=10, pady=10, expand=True, fill=tk.BOTH)
+        for art in pend:
+            lb.insert(tk.END, f"{art.title} (Author: {art.author})")
+
+        def app_sel():
+            sel = lb.curselection()
+            if not sel:
+                return
+            art = pend[sel[0]]
+            if messagebox.askyesno("Approve", f"Approve '{art.title}'?"):
+                art.status = "Published"
+                messagebox.showinfo("Success", "Approved!")
+                rv.destroy()
+
+        tk.Button(rv, text="Approve Selected", bg="#1b365d", fg="white", command=app_sel).pack(pady=10)
+
+    def librarian_view_all(self):
+        aw = tk.Toplevel(self.root)
+        aw.title("All Records")
+        aw.geometry("650x450")
+        txt = tk.Text(aw, wrap=tk.WORD, padx=15, pady=15)
+        txt.pack(expand=True, fill=tk.BOTH)
+        for i, art in enumerate(self.articles, 1):
+            txt.insert(tk.END, f"[{i}] {art}\n    Abstract: {art.abstract}\n\n" + "-" * 50 + "\n")
+        txt.config(state=tk.DISABLED)
+
+    def open_student_portal(self, uid):
+        self.clear_window()
+        u = self.users[uid]
+        f = tk.Frame(self.root, bg="#eef2f7", padx=20, pady=20)
+        f.pack(expand=True, fill=tk.BOTH)
+        c = tk.Frame(f, bg="#eef2f7")
+        c.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+
+        tk.Label(c, text=f"STUDENT PORTAL - {u['name']}", font=("Arial", 16, "bold"), bg="#eef2f7", fg="#1b365d").pack(
+            pady=20)
+        tk.Button(c, text="Search Articles", width=35, bg="white", command=self.student_search).pack(pady=8)
+        tk.Button(c, text="View Published Articles", width=35, bg="white", command=self.student_view_published).pack(
+            pady=8)
+        tk.Button(c, text="Change Password", width=35, bg="white", command=lambda: self.open_change_password(uid)).pack(
+            pady=8)
+        tk.Button(c, text="Log Out", width=35, bg="#000", fg="black", command=self.create_login_screen).pack(pady=15)
+
+    def student_search(self):
+        kw = simpledialog.askstring("Search", "Enter keyword:")
+        if not kw:
+            return
+        kw = kw.lower()
+        res = [x for x in self.articles if x.status == "Published" and (
+                    kw in x.title.lower() or kw in x.author.lower() or kw in x.abstract.lower())]
+        sw = tk.Toplevel(self.root)
+        sw.title("Results")
+        sw.geometry("650x450")
+        txt = tk.Text(sw, wrap=tk.WORD, padx=15, pady=15)
+        txt.pack(expand=True, fill=tk.BOTH)
+        if not res:
+            txt.insert(tk.END, "No matching articles found.")
+        else:
+            for i, art in enumerate(res, 1):
+                txt.insert(tk.END, f"[{i}] {art}\n    Abstract: {art.abstract}\n\n" + "-" * 50 + "\n")
+            if messagebox.askyesno("Download", "Download full content?"):
+                messagebox.showinfo("Success", "Downloaded successfully!")
+        txt.config(state=tk.DISABLED)
+
+    def student_view_published(self):
+        pw = tk.Toplevel(self.root)
+        pw.title("Published Articles")
+        pw.geometry("650x450")
+        txt = tk.Text(pw, wrap=tk.WORD, padx=15, pady=15)
+        txt.pack(expand=True, fill=tk.BOTH)
+        pub = [x for x in self.articles if x.status == "Published"]
+        if not pub:
+            txt.insert(tk.END, "No published articles.")
+        else:
+            for i, art in enumerate(pub, 1):
+                txt.insert(tk.END, f"[{i}] {art}\n    Abstract: {art.abstract}\n\n" + "-" * 50 + "\n")
+        txt.config(state=tk.DISABLED)
 
 
 if __name__ == "__main__":
-    repo = InstitutionalRepositorySystem()
-    repo.main_menu()
+    root = tk.Tk()
+    app = InstitutionalRepositoryGUI(root)
+    root.mainloop()
