@@ -58,7 +58,7 @@ class InstitutionalRepositorySystem:
         if user_id not in self.users:
             print("\n[Access Denied]: The user is not yet registered.")
             print(
-                ">> Notice: Students and users who are not yet registered must report to the Information and Communications Office.")
+                ">> Notice: Students and users who are not yet registered must report to the Information and Communications Technology Office.")
             return
 
         password = input("Enter Password: ").strip()
